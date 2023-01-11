@@ -114,8 +114,11 @@ view model =
                         |> Component.Tabs.view
                     )
                 , el [ width fill, alignTop ] <|
-                    column [ alignRight ]
-                        [ link [ Font.size 12, alignLeft ]
+                    column [ alignRight 
+                    , Component.Theme.spacing 1
+                    , Font.size 14
+                    ]
+                        [ link [ alignLeft ]
                             { url = "https://github.com/sethlowie"
                             , label =
                                 row [ Component.Theme.spacing 1 ]
@@ -126,7 +129,7 @@ view model =
                                     , text "github.com/sethlowie"
                                     ]
                             }
-                        , link [ Font.size 12, alignLeft ]
+                        , link [ alignLeft ]
                             { url = "https://www.linkedin.com/in/slowie/"
                             , label =
                                 row [ Component.Theme.spacing 1 ]
