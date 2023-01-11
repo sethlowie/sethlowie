@@ -1,7 +1,7 @@
 module Main exposing (main)
 
 import Browser
-import Browser.Navigation exposing (Key)
+import Browser.Navigation as Nav exposing (Key)
 import Component.Container
 import Component.Icons
 import Component.Tabs
@@ -9,7 +9,9 @@ import Component.Theme
 import Element exposing (..)
 import Element.Border as Border
 import Element.Font as Font
+import Routes
 import Url exposing (Url)
+import Url.Parser exposing (parse)
 
 
 
@@ -17,7 +19,9 @@ import Url exposing (Url)
 
 
 type alias Model =
-    {}
+    { route : Routes.Route
+    , navKey : Key
+    }
 
 
 
@@ -43,12 +47,19 @@ type Msg
 
 init : Flags -> Url -> Key -> ( Model, Cmd Msg )
 init flags url key =
-    ( initialModel, Cmd.none )
+    let
+        route =
+            Maybe.withDefault Routes.NotFound <|
+                parse Routes.route url
+    in
+    ( initialModel route key, Cmd.none )
 
 
-initialModel : Model
-initialModel =
-    {}
+initialModel : Routes.Route -> Key -> Model
+initialModel route key =
+    { route = route
+    , navKey = key
+    }
 
 
 
@@ -58,11 +69,23 @@ initialModel =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        UrlChange _ ->
-            ( model, Cmd.none )
+        UrlChange url ->
+            let
+                route =
+                    Maybe.withDefault Routes.NotFound <|
+                        parse Routes.route url
+            in
+            ( { model | route = route }, Cmd.none )
 
-        UrlRequest _ ->
-            ( model, Cmd.none )
+        UrlRequest urlRequest ->
+            case urlRequest of
+                Browser.Internal url ->
+                    ( model
+                    , Nav.pushUrl model.navKey <| Url.toString url
+                    )
+
+                Browser.External href ->
+                    ( model, Nav.load href )
 
 
 
@@ -82,9 +105,9 @@ view : Model -> Browser.Document Msg
 view model =
     let
         tabs =
-            [ { label = "Home", key = "home" }
-            , { label = "Blog", key = "blog" }
-            , { label = "About", key = "about" }
+            [ { label = "Home", key = "home", href = "/" }
+            , { label = "Blog", key = "blog", href = "/blog" }
+            , { label = "About", key = "about", href = "/about" }
             ]
     in
     { title = "Seth Lowie"
@@ -110,14 +133,15 @@ view model =
                         text "Seth Lowie"
                 , el [ centerX ]
                     (Component.Tabs.config tabs
-                        |> Component.Tabs.activeKey "home"
+                        |> Component.Tabs.activeKey (Routes.toString model.route)
                         |> Component.Tabs.view
                     )
                 , el [ width fill, alignTop ] <|
-                    column [ alignRight 
-                    , Component.Theme.spacing 1
-                    , Font.size 14
-                    ]
+                    column
+                        [ alignRight
+                        , Component.Theme.spacing 1
+                        , Font.size 14
+                        ]
                         [ link [ alignLeft ]
                             { url = "https://github.com/sethlowie"
                             , label =
