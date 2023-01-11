@@ -1,5 +1,6 @@
 module Main exposing (main)
 
+import Blog
 import Browser
 import Browser.Navigation as Nav exposing (Key)
 import Component.Container
@@ -21,6 +22,7 @@ import Url.Parser exposing (parse)
 type alias Model =
     { route : Routes.Route
     , navKey : Key
+    , blogModel : Blog.Model
     }
 
 
@@ -59,6 +61,7 @@ initialModel : Routes.Route -> Key -> Model
 initialModel route key =
     { route = route
     , navKey = key
+    , blogModel = Blog.init
     }
 
 
@@ -103,6 +106,46 @@ subscriptions model =
 
 view : Model -> Browser.Document Msg
 view model =
+    { title = "Seth Lowie"
+    , body =
+        [ Component.Container.app
+            [ width fill
+            , height fill
+            , scrollbars
+            ]
+          <|
+            column
+                [ width fill
+                , height fill
+                , scrollbars
+                ]
+                [ appBar model.route
+                , el
+                    [ width fill
+                    , height fill
+                    , scrollbars
+                    , Component.Theme.padding 4
+                    ]
+                  <|
+                    case model.route of
+                        Routes.Home ->
+                            text "Home"
+
+                        Routes.Blog ->
+                            Blog.view model.blogModel
+
+                        Routes.About ->
+                            text "About"
+
+                        Routes.NotFound ->
+                            text "Not Found"
+                ]
+        ]
+    }
+
+
+appBar : Routes.Route -> Element Msg
+appBar route =
     let
         tabs =
             [ { label = "Home", key = "home", href = "/" }
@@ -110,64 +153,55 @@ view model =
             , { label = "About", key = "about", href = "/about" }
             ]
     in
-    { title = "Seth Lowie"
-    , body =
-        [ Component.Container.app
-            [ width fill
-            , height fill
-            ]
-          <|
-            row
-                [ spaceEvenly
-                , width fill
-                , Component.Theme.padding 4
-                , Border.widthEach
-                    { top = 0
-                    , right = 0
-                    , left = 0
-                    , bottom = 1
+    row
+        [ spaceEvenly
+        , width fill
+        , Component.Theme.padding 4
+        , Border.widthEach
+            { top = 0
+            , right = 0
+            , left = 0
+            , bottom = 1
+            }
+        ]
+        [ el [ width fill ] <|
+            el [] <|
+                text "Seth Lowie"
+        , el [ centerX ]
+            (Component.Tabs.config tabs
+                |> Component.Tabs.activeKey (Routes.toString route)
+                |> Component.Tabs.view
+            )
+        , el [ width fill, alignTop ] <|
+            column
+                [ alignRight
+                , Component.Theme.spacing 1
+                , Font.size 14
+                ]
+                [ link [ alignLeft ]
+                    { url = "https://github.com/sethlowie"
+                    , label =
+                        row [ Component.Theme.spacing 1 ]
+                            [ el
+                                []
+                              <|
+                                Component.Icons.github
+                            , text "github.com/sethlowie"
+                            ]
+                    }
+                , link [ alignLeft ]
+                    { url = "https://www.linkedin.com/in/slowie/"
+                    , label =
+                        row [ Component.Theme.spacing 1 ]
+                            [ el
+                                []
+                              <|
+                                Component.Icons.linkedin
+                            , text "linkedin.com"
+                            ]
                     }
                 ]
-                [ el [ width fill ] <|
-                    el [] <|
-                        text "Seth Lowie"
-                , el [ centerX ]
-                    (Component.Tabs.config tabs
-                        |> Component.Tabs.activeKey (Routes.toString model.route)
-                        |> Component.Tabs.view
-                    )
-                , el [ width fill, alignTop ] <|
-                    column
-                        [ alignRight
-                        , Component.Theme.spacing 1
-                        , Font.size 14
-                        ]
-                        [ link [ alignLeft ]
-                            { url = "https://github.com/sethlowie"
-                            , label =
-                                row [ Component.Theme.spacing 1 ]
-                                    [ el
-                                        []
-                                      <|
-                                        Component.Icons.github
-                                    , text "github.com/sethlowie"
-                                    ]
-                            }
-                        , link [ alignLeft ]
-                            { url = "https://www.linkedin.com/in/slowie/"
-                            , label =
-                                row [ Component.Theme.spacing 1 ]
-                                    [ el
-                                        []
-                                      <|
-                                        Component.Icons.linkedin
-                                    , text "linkedin.com"
-                                    ]
-                            }
-                        ]
-                ]
         ]
-    }
 
 
 main =
